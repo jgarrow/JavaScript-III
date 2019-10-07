@@ -16,12 +16,33 @@
   * destroy() // prototype method that returns: `${this.name} was removed from the game.`
 */
 
+function GameObject(attrs) {
+  this.createdAt = attrs.createdAt;
+  this.name = attrs.name;
+  this.dimensions = attrs.dimensions;
+}
+
+GameObject.prototype.destroy = function() {
+  return `${this.name} was removed from the game.`
+};
+
 /*
   === CharacterStats ===
   * healthPoints
   * takeDamage() // prototype method -> returns the string '<object name> took damage.'
   * should inherit destroy() from GameObject's prototype
 */
+
+function CharacterStats(attrs) {
+  this.healthPoints = attrs.healthPoints;
+  GameObject.call(this, attrs);
+}
+
+CharacterStats.prototype = Object.create(GameObject.prototype);
+
+CharacterStats.prototype.takeDamage = function () {
+  return `${this.name} took damage.`
+};
 
 /*
   === Humanoid (Having an appearance or character resembling that of a human.) ===
@@ -33,6 +54,19 @@
   * should inherit takeDamage() from CharacterStats
 */
  
+function Humanoid(attrs) {
+  this.team = attrs.team;
+  this.weapons = attrs.weapons;
+  this.language = attrs.language;
+  CharacterStats.call(this, attrs);
+}
+
+Humanoid.prototype = Object.create(CharacterStats.prototype);
+
+Humanoid.prototype.greet = function () {
+  return `${this.name} offers a greeting in ${this.language}.`;
+};
+
 /*
   * Inheritance chain: GameObject -> CharacterStats -> Humanoid
   * Instances of Humanoid should have all of the same properties as CharacterStats and GameObject.
@@ -41,7 +75,7 @@
 
 // Test you work by un-commenting these 3 objects and the list of console logs below:
 
-/*
+
   const mage = new Humanoid({
     createdAt: new Date(),
     dimensions: {
@@ -102,9 +136,104 @@
   console.log(archer.greet()); // Lilith offers a greeting in Elvish.
   console.log(mage.takeDamage()); // Bruce took damage.
   console.log(swordsman.destroy()); // Sir Mustachio was removed from the game.
-*/
+
 
   // Stretch task: 
   // * Create Villain and Hero constructor functions that inherit from the Humanoid constructor function.  
   // * Give the Hero and Villains different methods that could be used to remove health points from objects which could result in destruction if health gets to 0 or drops below 0;
   // * Create two new objects, one a villain and one a hero and fight it out with methods!
+
+  function getRandomInt(maxNum) {
+    return Math.floor(Math.random() * Math.floor(maxNum));
+  }
+
+  function Villain(attrs) {
+    Humanoid.call(this, attrs);
+    this.maxDamage = attrs.maxDamage;
+  }
+
+  Villain.prototype = Object.create(Humanoid.prototype);
+
+  Villain.prototype.curse = function () {
+    return getRandomInt(this.maxDamage);
+  };
+
+
+  function Hero(attrs) {
+    Humanoid.call(this, attrs);
+    this.maxDamage = attrs.maxDamage;
+  }
+
+  Hero.prototype = Object.create(Humanoid.prototype);
+  
+  Hero.prototype.attack = function () {
+    return getRandomInt(this.maxDamage);
+  }
+
+  const hero = new Hero({
+    createdAt: new Date(),
+    dimensions: {
+      length: 1,
+      width: 3,
+      height: 5,
+    },
+    healthPoints: 20,
+    name: 'Katara',
+    team: 'Southern Water Tribe',
+    weapons: [
+      'water', 
+      'ice', 
+      'snow'
+    ],
+    language: 'Common Tongue',
+    maxDamage: 12,
+  });
+
+  const villain = new Villain({
+    createdAt: new Date(),
+    dimensions: {
+      length: 1,
+      width: 2,
+      height: 5,
+    },
+    healthPoints: 20,
+    name: 'Azula',
+    team: 'Fire Nation',
+    weapons: [
+      'fire', 
+      'lightning', 
+    ],
+    language: 'Common Tongue',
+    maxDamage: 15,
+  });
+
+
+  console.log(`\n\n-------------------------------\n\n`);
+  console.log(`${villain.name} and ${hero.name} are battling!`);
+
+  while (hero.healthPoints > 0 && villain.healthPoints > 0) {    
+    console.log(`${villain.name} attacks with ${villain.weapons[getRandomInt(villain.weapons.length)]}!`);
+    console.log(hero.takeDamage());
+
+    let villainDamage = villain.curse();
+    console.log(`${villain.name} dealt ${villainDamage} damage!`);
+    hero.healthPoints = hero.healthPoints - villainDamage;
+
+    if (hero.healthPoints <= 0) {
+      console.log(hero.destroy());
+    } else {
+      console.log(`${hero.name} withstood the attack! ${hero.name} has ${hero.healthPoints}hp remaining.`);
+      console.log(`${hero.name} counterattacks with ${hero.weapons[getRandomInt(hero.weapons.length)]}!`);
+      console.log(villain.takeDamage());
+
+      let heroDamage = hero.attack();
+      console.log(`${hero.name} dealt ${heroDamage} damage!`);
+      villain.healthPoints = villain.healthPoints - heroDamage;
+
+      if (villain.healthPoints <= 0) {
+        console.log(villain.destroy());
+      } else {
+        console.log(`${villain.name} withstood the attack! ${villain.name} has ${villain.healthPoints}hp remaining.`);
+      }
+    }
+  }
